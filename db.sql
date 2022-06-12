@@ -1,3 +1,5 @@
+DROP DATABASE NozResturant;
+
 CREATE DATABASE NozResturant;
 USE NozResturant;
 
@@ -81,23 +83,32 @@ BEGIN
 
     -- create temp table of updated customers
     SELECT
-        d.CustomerSerial
+        d.CustomerDimSerial, s.CustomerSerial ,s.CustomerName , s.CustomerPhone , s.CustomerEmail , s.CustomerImage , s.CreatedAt
     INTO #updated_customers
     FROM
         AccCustomerDim d JOIN AccCustomerSt s ON d.CustomerSerial = s.CustomerSerial WHERE CONCAT(s.CustomerName , s.CustomerPhone , s.CustomerEmail , s.CustomerImage) != CONCAT(d.CustomerName , d.CustomerPhone , d.CustomerEmail , d.CustomerImage)
 
 
     UPDATE AccCustomerDim  
-    SET EndEffectiveDate = GETDATE() 
-    FROM AccCustomerDim d LEFT 
-    JOIN AccCustomerSt s 
-        ON d.CustomerSerial = s.CustomerSerial 
-    WHERE s.CustomerSerial IS NULL
+    SET EndEffectiveDate = GETDATE()
+    FROM AccCustomerDim d
+    JOIN #updated_customers u 
+        ON d.CustomerDimSerial = u.CustomerDimSerial
 
-
-
-
-
-
-
+    
+    INSERT INTO AccCustomerDim (
+        CustomerSerial,
+        CustomerName,
+        CustomerPhone,
+        CustomerEmail,
+        CustomerImage,
+        CreatedAt
+    ) SELECT 
+        u.CustomerSerial,
+        u.CustomerName,
+        u.CustomerPhone,
+        u.CustomerEmail,
+        u.CustomerImage,
+        u.CreatedAt 
+    FROM #updated_customers u
 END
